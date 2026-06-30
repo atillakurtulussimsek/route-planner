@@ -11,6 +11,15 @@
  *  - geometries=geojson & overview=full → harita çizimi için tam polyline.
  */
 
+import dns from "node:dns";
+import net from "node:net";
+
+// IPv6 erişimi olmayan ortamlarda Node fetch'inin (undici) takılmasını önlemek
+// için IPv4'ü önceliklendir ve Happy Eyeballs'ı kapat.
+// Bkz. /api/geocode route'undaki ayrıntılı not.
+dns.setDefaultResultOrder("ipv4first");
+net.setDefaultAutoSelectFamily(false);
+
 const OSRM_TRIP_URL = "https://router.project-osrm.org/trip/v1/driving";
 
 export async function POST(request) {
