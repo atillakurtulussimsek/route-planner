@@ -42,3 +42,7 @@ next-env.d.ts
 
 # memory bank — kept local only, not pushed to remote (per user preference)
 /memory-bank/
+
+# AI assistant instruction files — kept local only, not pushed to remote (per user preference)
+/CLAUDE.md
+/AGENTS.md
