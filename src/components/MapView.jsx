@@ -101,6 +101,18 @@ export default function MapView({ stops = [], polyline = null, pickMode = false,
             </strong>
             <br />
             {s.raw}
+            {s.customer && (
+              <>
+                <br />
+                Müşteri: {s.customer}
+              </>
+            )}
+            {s.orderNo && (
+              <>
+                <br />
+                Sipariş No: {s.orderNo}
+              </>
+            )}
           </Popup>
         </Marker>
       ))}

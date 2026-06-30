@@ -10,6 +10,8 @@ import {
   MapPin,
   AlertCircle,
   RotateCw,
+  User,
+  Hash,
 } from "lucide-react";
 
 /** Tek bir adres satırı: durum rozeti + düzenle/sil/yeniden dene eylemleri. */
@@ -21,17 +23,39 @@ export default function AddressItem({
   onRetry,
 }) {
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(address.raw);
+  const [draft, setDraft] = useState(() => ({
+    raw: address.raw,
+    customer: address.customer || "",
+    orderNo: address.orderNo || "",
+  }));
+
+  function startEdit() {
+    setDraft({
+      raw: address.raw,
+      customer: address.customer || "",
+      orderNo: address.orderNo || "",
+    });
+    setEditing(true);
+  }
 
   function saveEdit() {
-    const text = draft.trim();
-    if (text && text !== address.raw) onUpdate(address.id, text);
+    const raw = draft.raw.trim();
+    if (!raw) return; // adres boş bırakılamaz
+    onUpdate(address.id, {
+      raw,
+      customer: draft.customer.trim(),
+      orderNo: draft.orderNo.trim(),
+    });
     setEditing(false);
   }
 
   function cancelEdit() {
-    setDraft(address.raw);
     setEditing(false);
+  }
+
+  function handleKey(e) {
+    if (e.key === "Enter") saveEdit();
+    if (e.key === "Escape") cancelEdit();
   }
 
   return (
@@ -43,37 +67,73 @@ export default function AddressItem({
 
       <div className="min-w-0 flex-1">
         {editing ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             <input
               autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") saveEdit();
-                if (e.key === "Escape") cancelEdit();
-              }}
+              value={draft.raw}
+              onChange={(e) => setDraft((d) => ({ ...d, raw: e.target.value }))}
+              onKeyDown={handleKey}
+              placeholder="Adres"
               className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
-            <button
-              onClick={saveEdit}
-              className="rounded-md p-1 text-green-600 hover:bg-green-50"
-              title="Kaydet"
-            >
-              <Check className="h-4 w-4" />
-            </button>
-            <button
-              onClick={cancelEdit}
-              className="rounded-md p-1 text-slate-500 hover:bg-slate-100"
-              title="İptal"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                value={draft.customer}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, customer: e.target.value }))
+                }
+                onKeyDown={handleKey}
+                placeholder="Müşteri adı (opsiyonel)"
+                className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              />
+              <input
+                value={draft.orderNo}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, orderNo: e.target.value }))
+                }
+                onKeyDown={handleKey}
+                placeholder="Sipariş no (opsiyonel)"
+                className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={saveEdit}
+                className="flex items-center gap-1 rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-green-700"
+                title="Kaydet"
+              >
+                <Check className="h-3.5 w-3.5" /> Kaydet
+              </button>
+              <button
+                onClick={cancelEdit}
+                className="flex items-center gap-1 rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
+                title="İptal"
+              >
+                <X className="h-3.5 w-3.5" /> İptal
+              </button>
+            </div>
           </div>
         ) : (
           <>
             <p className="truncate text-sm font-medium text-slate-800" title={address.raw}>
               {address.raw}
             </p>
+            {(address.customer || address.orderNo) && (
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-600">
+                {address.customer && (
+                  <span className="flex items-center gap-1" title="Müşteri">
+                    <User className="h-3 w-3 text-slate-400" />
+                    <span className="truncate">{address.customer}</span>
+                  </span>
+                )}
+                {address.orderNo && (
+                  <span className="flex items-center gap-1" title="Sipariş no">
+                    <Hash className="h-3 w-3 text-slate-400" />
+                    <span className="truncate">{address.orderNo}</span>
+                  </span>
+                )}
+              </div>
+            )}
             <StatusLine address={address} onRetry={onRetry} />
           </>
         )}
@@ -82,10 +142,7 @@ export default function AddressItem({
       {!editing && (
         <div className="flex shrink-0 items-center gap-1">
           <button
-            onClick={() => {
-              setDraft(address.raw);
-              setEditing(true);
-            }}
+            onClick={startEdit}
             className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600"
             title="Düzenle"
           >

@@ -18,6 +18,8 @@ export function exportAddresses(addresses) {
     exportedAt: new Date().toISOString(),
     addresses: (addresses || []).map((a) => ({
       raw: a.raw,
+      customer: a.customer || "",
+      orderNo: a.orderNo || "",
       lat: a.lat ?? null,
       lon: a.lon ?? null,
     })),
@@ -74,6 +76,8 @@ export function importAddresses(file) {
             return {
               id: `${Date.now()}-${idx}-${Math.round(performance.now())}`,
               raw: a.raw.trim(),
+              customer: typeof a.customer === "string" ? a.customer.trim() : "",
+              orderNo: typeof a.orderNo === "string" ? a.orderNo.trim() : "",
               lat,
               lon,
               status: hasCoords ? "ok" : "pending",

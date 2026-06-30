@@ -57,7 +57,16 @@ export function useRoutePlanner() {
       if (!text) return;
       setAddresses((prev) => [
         ...prev,
-        { id: makeId(), raw: text, lat: null, lon: null, status: "pending", error: null },
+        {
+          id: makeId(),
+          raw: text,
+          customer: "",
+          orderNo: "",
+          lat: null,
+          lon: null,
+          status: "pending",
+          error: null,
+        },
       ]);
       invalidateRoute();
     },
@@ -75,7 +84,16 @@ export function useRoutePlanner() {
       const coordLabel = `Konum: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
       setAddresses((prev) => [
         ...prev,
-        { id, raw: coordLabel, lat, lon, status: "ok", error: null },
+        {
+          id,
+          raw: coordLabel,
+          customer: "",
+          orderNo: "",
+          lat,
+          lon,
+          status: "ok",
+          error: null,
+        },
       ]);
       invalidateRoute();
 
@@ -101,15 +119,37 @@ export function useRoutePlanner() {
     [invalidateRoute],
   );
 
+  // fields: { raw?, customer?, orderNo? } — verilen alanları günceller.
+  // Yalnızca ADRES metni değişirse koordinatlar sıfırlanıp yeniden geocode'a
+  // sokulur ve rota geçersiz olur; müşteri adı / sipariş no değişimi koordinatı
+  // ve rotayı etkilemez.
   const updateAddress = useCallback(
-    (id, raw) => {
-      const text = (raw || "").trim();
-      if (!text) return;
-      // Metin değişti → koordinatları sıfırla, tekrar geocode'a sok.
-      patchAddress(id, { raw: text, lat: null, lon: null, status: "pending", error: null });
-      invalidateRoute();
+    (id, fields) => {
+      const current = addresses.find((a) => a.id === id);
+      if (!current) return;
+
+      const patch = {};
+      if (typeof fields.customer === "string") patch.customer = fields.customer.trim();
+      if (typeof fields.orderNo === "string") patch.orderNo = fields.orderNo.trim();
+
+      let textChanged = false;
+      if (typeof fields.raw === "string") {
+        const text = fields.raw.trim();
+        if (text && text !== current.raw) {
+          patch.raw = text;
+          patch.lat = null;
+          patch.lon = null;
+          patch.status = "pending";
+          patch.error = null;
+          textChanged = true;
+        }
+      }
+
+      if (Object.keys(patch).length === 0) return;
+      patchAddress(id, patch);
+      if (textChanged) invalidateRoute();
     },
-    [patchAddress, invalidateRoute],
+    [addresses, patchAddress, invalidateRoute],
   );
 
   const retryAddress = useCallback(

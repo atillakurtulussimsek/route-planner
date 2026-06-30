@@ -33,7 +33,7 @@ export default function Home() {
           const a = byId.get(id);
           if (!a || a.lat == null) return null;
           const type = idx === 0 ? "start" : idx === ids.length - 1 ? "end" : "mid";
-          return { id: a.id, lat: a.lat, lon: a.lon, raw: a.raw, seq: idx + 1, label: idx + 1, type };
+          return { id: a.id, lat: a.lat, lon: a.lon, raw: a.raw, customer: a.customer, orderNo: a.orderNo, seq: idx + 1, label: idx + 1, type };
         })
         .filter(Boolean);
     }
@@ -41,7 +41,7 @@ export default function Home() {
     // Rota yoksa, koordinatı çözülmüş tüm adresleri sade pin olarak göster.
     return planner.addresses
       .filter((a) => a.status === "ok")
-      .map((a) => ({ id: a.id, lat: a.lat, lon: a.lon, raw: a.raw, seq: null, label: "•", type: "plain" }));
+      .map((a) => ({ id: a.id, lat: a.lat, lon: a.lon, raw: a.raw, customer: a.customer, orderNo: a.orderNo, seq: null, label: "•", type: "plain" }));
   }, [planner.addresses, planner.route]);
 
   async function handleImport(file) {
