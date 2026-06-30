@@ -78,9 +78,11 @@ export default function Home() {
             canOptimize={planner.canOptimize}
             isOptimizing={planner.isOptimizing}
             hasAddresses={planner.addresses.length > 0}
+            hasRoute={planner.hasRoute}
             pickMode={planner.pickMode}
             onTogglePickMode={planner.togglePickMode}
             onOptimize={planner.optimize}
+            onPrintRoute={planner.printRoute}
             onExport={planner.exportJSON}
             onImport={handleImport}
             onClear={planner.clearAll}

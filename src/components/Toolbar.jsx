@@ -1,16 +1,18 @@
 "use client";
 
 import { useRef } from "react";
-import { Route, Download, Upload, Trash2, Loader2, MapPin } from "lucide-react";
+import { Route, Download, Upload, Trash2, Loader2, MapPin, Printer } from "lucide-react";
 
-/** Ana eylem çubuğu: Optimize Et / Haritadan Ekle / Dışa Aktar / İçe Aktar / Temizle. */
+/** Ana eylem çubuğu: Optimize Et / Haritadan Ekle / Liste (PDF) / Dışa Aktar / İçe Aktar / Temizle. */
 export default function Toolbar({
   canOptimize,
   isOptimizing,
   hasAddresses,
+  hasRoute,
   pickMode,
   onTogglePickMode,
   onOptimize,
+  onPrintRoute,
   onExport,
   onImport,
   onClear,
@@ -60,6 +62,19 @@ export default function Toolbar({
       >
         <MapPin className="h-4 w-4" />
         {pickMode ? "Haritadan Ekle: Açık" : "Haritadan Ekle"}
+      </button>
+
+      <button
+        onClick={onPrintRoute}
+        disabled={!hasRoute}
+        className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        title={
+          hasRoute
+            ? "Rota listesini yazdır / PDF olarak kaydet"
+            : "Önce rotayı optimize edin"
+        }
+      >
+        <Printer className="h-4 w-4" /> Liste (PDF)
       </button>
 
       <button

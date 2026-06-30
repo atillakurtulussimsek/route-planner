@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { geocodeAddress, reverseGeocode } from "@/lib/geocoding";
 import { optimizeRoute } from "@/lib/optimizer";
 import { exportAddresses, importAddresses } from "@/lib/persistence";
+import { printRouteList } from "@/lib/routePrint";
 
 // Nominatim politikası: saniyede en fazla 1 istek. Güvenli pay ile 1100ms.
 const GEOCODE_THROTTLE_MS = 1100;
@@ -255,6 +256,37 @@ export function useRoutePlanner() {
     [invalidateRoute],
   );
 
+  // ---- Rota listesini yazdır / PDF ----------------------------------------
+
+  // Optimize edilmiş rutayı ziyaret sırasına göre yazdırılabilir liste olarak açar
+  // (yöneticilere rut bilgisi vermek için). Yalnızca rota varken anlamlıdır.
+  const printRoute = useCallback(() => {
+    if (!route?.orderedIds?.length) return;
+    const byId = new Map(addresses.map((a) => [a.id, a]));
+    const stops = route.orderedIds
+      .map((id, idx) => {
+        const a = byId.get(id);
+        if (!a || a.lat == null) return null;
+        return {
+          seq: idx + 1,
+          raw: a.raw,
+          customer: a.customer || "",
+          orderNo: a.orderNo || "",
+          lat: a.lat,
+          lon: a.lon,
+        };
+      })
+      .filter(Boolean);
+    if (stops.length === 0) return;
+
+    printRouteList({
+      stops,
+      distance: route.distance,
+      duration: route.duration,
+      dateText: new Date().toLocaleString("tr-TR"),
+    });
+  }, [addresses, route]);
+
   return {
     // state
     addresses,
@@ -276,5 +308,7 @@ export function useRoutePlanner() {
     optimize,
     exportJSON,
     importJSON,
+    printRoute,
+    hasRoute: !!route?.orderedIds?.length,
   };
 }
