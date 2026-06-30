@@ -1,13 +1,15 @@
 "use client";
 
 import { useRef } from "react";
-import { Route, Download, Upload, Trash2, Loader2 } from "lucide-react";
+import { Route, Download, Upload, Trash2, Loader2, MapPin } from "lucide-react";
 
-/** Ana eylem çubuğu: Optimize Et / Dışa Aktar / İçe Aktar / Temizle. */
+/** Ana eylem çubuğu: Optimize Et / Haritadan Ekle / Dışa Aktar / İçe Aktar / Temizle. */
 export default function Toolbar({
   canOptimize,
   isOptimizing,
   hasAddresses,
+  pickMode,
+  onTogglePickMode,
   onOptimize,
   onExport,
   onImport,
@@ -40,6 +42,24 @@ export default function Toolbar({
           <Route className="h-4 w-4" />
         )}
         {isOptimizing ? "Hesaplanıyor…" : "Rotayı Optimize Et"}
+      </button>
+
+      <button
+        onClick={onTogglePickMode}
+        aria-pressed={pickMode}
+        className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+          pickMode
+            ? "border-emerald-600 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
+            : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+        }`}
+        title={
+          pickMode
+            ? "Haritadan ekleme modu açık — kapatmak için tıkla"
+            : "Haritaya tıklayarak nokta eklemek için modu aç"
+        }
+      >
+        <MapPin className="h-4 w-4" />
+        {pickMode ? "Haritadan Ekle: Açık" : "Haritadan Ekle"}
       </button>
 
       <button

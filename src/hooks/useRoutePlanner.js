@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { geocodeAddress } from "@/lib/geocoding";
+import { geocodeAddress, reverseGeocode } from "@/lib/geocoding";
 import { optimizeRoute } from "@/lib/optimizer";
 import { exportAddresses, importAddresses } from "@/lib/persistence";
 
@@ -27,6 +27,9 @@ export function useRoutePlanner() {
   const [route, setRoute] = useState(null); // { order, geometry, distance, duration }
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeError, setOptimizeError] = useState(null);
+
+  // Haritadan tıklayarak nokta ekleme modu (Toolbar butonu ile aç/kapat).
+  const [pickMode, setPickMode] = useState(false);
 
   // Kuyruk işleme kilidi + tetikleyici sayaç.
   const processingRef = useRef(false);
@@ -60,6 +63,35 @@ export function useRoutePlanner() {
     },
     [invalidateRoute],
   );
+
+  // Haritaya tıklanan koordinatı doğrudan ekler. Koordinat zaten elde olduğu
+  // için nokta anında 'ok' durumunda görünür; insan-okur etiket arkaplanda ters
+  // geocoding ile getirilip güncellenir (başarısız olursa koordinat etiketi kalır).
+  const addAddressFromCoords = useCallback(
+    async (lat, lon) => {
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+      const id = makeId();
+      const coordLabel = `Konum: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      setAddresses((prev) => [
+        ...prev,
+        { id, raw: coordLabel, lat, lon, status: "ok", error: null },
+      ]);
+      invalidateRoute();
+
+      try {
+        const label = await reverseGeocode(lat, lon);
+        if (label) patchAddress(id, { raw: label });
+      } catch {
+        /* ters geocoding başarısız olsa da koordinat geçerli; etiket koordinatta kalır */
+      }
+    },
+    [invalidateRoute, patchAddress],
+  );
+
+  const togglePickMode = useCallback(() => {
+    setPickMode((prev) => !prev);
+  }, []);
 
   const removeAddress = useCallback(
     (id) => {
@@ -192,8 +224,11 @@ export function useRoutePlanner() {
     isGeocoding,
     geocodedCount: geocodedAddresses.length,
     canOptimize,
+    pickMode,
     // eylemler
     addAddress,
+    addAddressFromCoords,
+    togglePickMode,
     removeAddress,
     updateAddress,
     retryAddress,

@@ -78,11 +78,20 @@ export default function Home() {
             canOptimize={planner.canOptimize}
             isOptimizing={planner.isOptimizing}
             hasAddresses={planner.addresses.length > 0}
+            pickMode={planner.pickMode}
+            onTogglePickMode={planner.togglePickMode}
             onOptimize={planner.optimize}
             onExport={planner.exportJSON}
             onImport={handleImport}
             onClear={planner.clearAll}
           />
+
+          {planner.pickMode && (
+            <Banner
+              type="info"
+              text="Haritadan ekleme modu açık: bir nokta eklemek için harita üzerinde istediğin yere tıkla. Kapatmak için butona tekrar bas."
+            />
+          )}
 
           {/* Uyarı / hata mesajları */}
           {planner.optimizeError && (
@@ -107,7 +116,12 @@ export default function Home() {
 
         {/* Sağ panel: harita */}
         <section className="relative min-h-[300px] flex-1">
-          <MapView stops={stops} polyline={planner.route?.geometry || null} />
+          <MapView
+            stops={stops}
+            polyline={planner.route?.geometry || null}
+            pickMode={planner.pickMode}
+            onPick={planner.addAddressFromCoords}
+          />
         </section>
       </main>
     </div>
@@ -119,7 +133,9 @@ function Banner({ type, text }) {
   const styles =
     type === "error"
       ? "border-red-200 bg-red-50 text-red-700"
-      : "border-amber-200 bg-amber-50 text-amber-700";
+      : type === "info"
+        ? "border-blue-200 bg-blue-50 text-blue-700"
+        : "border-amber-200 bg-amber-50 text-amber-700";
   return (
     <div className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${styles}`}>
       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />

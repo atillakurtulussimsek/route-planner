@@ -17,6 +17,14 @@ body {
   font-family: inherit;
 }
 
+/* Haritadan ekleme modu açıkken imleç artı (+) olur — tıklanabilirliği belli eder.
+   Leaflet'in kendi grab imlecini geçersiz kılmak için !important gerekir. */
+.pick-mode-cursor,
+.pick-mode-cursor .leaflet-grab,
+.pick-mode-cursor .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
 /* Numaralı durak pinleri için özel divIcon stili (marker görseli gerektirmez) */
 .stop-pin {
   background: transparent;

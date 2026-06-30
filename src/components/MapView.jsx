@@ -8,6 +8,7 @@ import {
   Popup,
   Polyline,
   useMap,
+  useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
 
@@ -47,10 +48,25 @@ function FitBounds({ positions }) {
 }
 
 /**
+ * Pick modu aktifken haritaya tıklamayı yakalar ve koordinatı yukarı bildirir.
+ * (react-leaflet event'leri yalnızca MapContainer çocuğu bir bileşenden dinlenir.)
+ */
+function ClickToAdd({ enabled, onPick }) {
+  useMapEvents({
+    click(e) {
+      if (enabled) onPick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+/**
  * @param {Array<{lat,lon,label,seq,type,id}>} stops - haritada gösterilecek duraklar
  * @param {Array<[number,number]>|null} polyline - optimize güzergah çizgisi
+ * @param {boolean} pickMode - haritadan tıklayarak nokta ekleme modu açık mı
+ * @param {(lat:number, lon:number)=>void} onPick - tıklanan koordinatı bildirir
  */
-export default function MapView({ stops = [], polyline = null }) {
+export default function MapView({ stops = [], polyline = null, pickMode = false, onPick }) {
   const positions = useMemo(() => {
     const pts = stops.map((s) => [s.lat, s.lon]);
     if (polyline?.length) pts.push(...polyline);
@@ -62,7 +78,7 @@ export default function MapView({ stops = [], polyline = null }) {
       center={DEFAULT_CENTER}
       zoom={DEFAULT_ZOOM}
       scrollWheelZoom
-      className="h-full w-full"
+      className={`h-full w-full ${pickMode ? "pick-mode-cursor" : ""}`}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> katkıda bulunanları'
@@ -90,6 +106,7 @@ export default function MapView({ stops = [], polyline = null }) {
       ))}
 
       <FitBounds positions={positions} />
+      <ClickToAdd enabled={pickMode} onPick={onPick} />
     </MapContainer>
   );
 }
