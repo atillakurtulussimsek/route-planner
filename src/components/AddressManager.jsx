@@ -12,10 +12,12 @@ export default function AddressManager({
   addresses,
   route,
   isGeocoding,
+  startId,
   onAdd,
   onUpdate,
   onRemove,
   onRetry,
+  onSetStart,
 }) {
   const [input, setInput] = useState("");
 
@@ -79,9 +81,11 @@ export default function AddressManager({
                 key={a.id}
                 address={a}
                 sequence={seqOf(a.id)}
+                isStart={a.id === startId}
                 onUpdate={onUpdate}
                 onRemove={onRemove}
                 onRetry={onRetry}
+                onSetStart={onSetStart}
               />
             ))}
           </ul>

@@ -12,15 +12,18 @@ import {
   RotateCw,
   User,
   Hash,
+  Home,
 } from "lucide-react";
 
-/** Tek bir adres satırı: durum rozeti + düzenle/sil/yeniden dene eylemleri. */
+/** Tek bir adres satırı: durum rozeti + başlangıç/düzenle/sil/yeniden dene eylemleri. */
 export default function AddressItem({
   address,
   sequence,
+  isStart = false,
   onUpdate,
   onRemove,
   onRetry,
+  onSetStart,
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(() => ({
@@ -59,10 +62,27 @@ export default function AddressItem({
   }
 
   return (
-    <li className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-      {/* Sıra numarası / durum ikonu */}
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
-        {sequence ?? <MapPin className="h-4 w-4" />}
+    <li
+      className={`flex items-start gap-3 rounded-lg border p-3 shadow-sm ${
+        isStart
+          ? "border-emerald-300 bg-emerald-50"
+          : "border-slate-200 bg-white"
+      }`}
+    >
+      {/* Sıra numarası / durum ikonu (başlangıçsa ev ikonu) */}
+      <div
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+          isStart
+            ? "bg-emerald-600 text-white"
+            : "bg-slate-100 text-slate-600"
+        }`}
+        title={isStart ? "Başlangıç (depo)" : undefined}
+      >
+        {isStart ? (
+          <Home className="h-4 w-4" />
+        ) : (
+          sequence ?? <MapPin className="h-4 w-4" />
+        )}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -141,6 +161,22 @@ export default function AddressItem({
 
       {!editing && (
         <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={() => onSetStart(address.id)}
+            className={`rounded-md p-1.5 hover:bg-emerald-50 ${
+              isStart
+                ? "text-emerald-600"
+                : "text-slate-400 hover:text-emerald-600"
+            }`}
+            title={
+              isStart
+                ? "Başlangıç işaretini kaldır"
+                : "Başlangıç (depo) yap"
+            }
+            aria-pressed={isStart}
+          >
+            <Home className="h-4 w-4" />
+          </button>
           <button
             onClick={startEdit}
             className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600"

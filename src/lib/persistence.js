@@ -10,18 +10,22 @@ const SCHEMA_VERSION = 1;
 /**
  * Adres listesini JSON dosyası olarak indirir.
  * @param {Array} addresses - Mevcut adres state'i.
+ * @param {string|null} [startId] - Başlangıç (depo) olarak seçili adresin id'si.
  */
-export function exportAddresses(addresses) {
+export function exportAddresses(addresses, startId = null) {
   const payload = {
     schemaVersion: SCHEMA_VERSION,
     app: "route-planner",
     exportedAt: new Date().toISOString(),
+    // Not: id'ler import'ta yeniden üretildiği için başlangıç, id yerine
+    // adres başına `isStart` bayrağı olarak taşınır (import bunu yeni id'ye eşler).
     addresses: (addresses || []).map((a) => ({
       raw: a.raw,
       customer: a.customer || "",
       orderNo: a.orderNo || "",
       lat: a.lat ?? null,
       lon: a.lon ?? null,
+      isStart: startId != null && a.id === startId,
     })),
   };
 
@@ -46,7 +50,8 @@ export function exportAddresses(addresses) {
  * (pending olanlar otomatik tekrar geocode edilir).
  *
  * @param {File} file - <input type="file"> ile seçilen dosya.
- * @returns {Promise<Array>} Normalize edilmiş adres dizisi.
+ * @returns {Promise<{addresses: Array, startId: string|null}>} Normalize edilmiş
+ *   adres dizisi ve (varsa) başlangıç olarak işaretli adresin yeni id'si.
  */
 export function importAddresses(file) {
   return new Promise((resolve, reject) => {
@@ -67,14 +72,18 @@ export function importAddresses(file) {
           throw new Error("Geçersiz dosya: 'addresses' listesi bulunamadı.");
         }
 
+        let startId = null;
         const normalized = data.addresses
           .filter((a) => a && typeof a.raw === "string" && a.raw.trim())
           .map((a, idx) => {
             const lat = typeof a.lat === "number" ? a.lat : null;
             const lon = typeof a.lon === "number" ? a.lon : null;
             const hasCoords = lat !== null && lon !== null;
+            const id = `${Date.now()}-${idx}-${Math.round(performance.now())}`;
+            // Başlangıç bayrağını yeni üretilen id'ye eşle (yalnızca ilki geçerli).
+            if (a.isStart === true && startId === null) startId = id;
             return {
-              id: `${Date.now()}-${idx}-${Math.round(performance.now())}`,
+              id,
               raw: a.raw.trim(),
               customer: typeof a.customer === "string" ? a.customer.trim() : "",
               orderNo: typeof a.orderNo === "string" ? a.orderNo.trim() : "",
@@ -89,7 +98,7 @@ export function importAddresses(file) {
           throw new Error("Dosyada geçerli adres bulunamadı.");
         }
 
-        resolve(normalized);
+        resolve({ addresses: normalized, startId });
       } catch (err) {
         reject(
           new Error(

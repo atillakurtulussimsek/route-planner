@@ -29,6 +29,10 @@ export function useRoutePlanner() {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeError, setOptimizeError] = useState(null);
 
+  // Kullanıcının açıkça seçtiği başlangıç (depo) adresinin id'si. null ise
+  // varsayılan davranış korunur: listedeki koordinatı çözülmüş ilk adres.
+  const [startId, setStartId] = useState(null);
+
   // Haritadan tıklayarak nokta ekleme modu (Toolbar butonu ile aç/kapat).
   const [pickMode, setPickMode] = useState(false);
 
@@ -112,9 +116,22 @@ export function useRoutePlanner() {
     setPickMode((prev) => !prev);
   }, []);
 
+  // Bir adresi başlangıç (depo) olarak işaretler. Zaten başlangıç olan adrese
+  // tekrar tıklanırsa işaret kaldırılır (varsayılan "ilk adres" davranışına döner).
+  // Başlangıç değişimi durak sırasını etkilediği için mevcut rota geçersizleşir.
+  const setStart = useCallback(
+    (id) => {
+      setStartId((prev) => (prev === id ? null : id));
+      invalidateRoute();
+    },
+    [invalidateRoute],
+  );
+
   const removeAddress = useCallback(
     (id) => {
       setAddresses((prev) => prev.filter((a) => a.id !== id));
+      // Başlangıç adresi silindiyse işareti temizle.
+      setStartId((prev) => (prev === id ? null : prev));
       invalidateRoute();
     },
     [invalidateRoute],
@@ -162,6 +179,7 @@ export function useRoutePlanner() {
 
   const clearAll = useCallback(() => {
     setAddresses([]);
+    setStartId(null);
     invalidateRoute();
   }, [invalidateRoute]);
 
@@ -219,6 +237,17 @@ export function useRoutePlanner() {
       return;
     }
 
+    // Kullanıcı bir başlangıç (depo) seçtiyse onu listenin başına al; OSRM
+    // `source=first` ilk koordinatı sabit başlangıç kabul eder. Seçim yoksa
+    // ya da seçilen adresin koordinatı henüz çözülmediyse mevcut sıra korunur.
+    if (startId) {
+      const idx = ready.findIndex((a) => a.id === startId);
+      if (idx > 0) {
+        const [start] = ready.splice(idx, 1);
+        ready.unshift(start);
+      }
+    }
+
     setIsOptimizing(true);
     try {
       const result = await optimizeRoute(
@@ -239,18 +268,20 @@ export function useRoutePlanner() {
     } finally {
       setIsOptimizing(false);
     }
-  }, [addresses]);
+  }, [addresses, startId]);
 
   // ---- Import / Export -----------------------------------------------------
 
   const exportJSON = useCallback(() => {
-    exportAddresses(addresses);
-  }, [addresses]);
+    exportAddresses(addresses, startId);
+  }, [addresses, startId]);
 
   const importJSON = useCallback(
     async (file) => {
-      const normalized = await importAddresses(file);
+      const { addresses: normalized, startId: importedStartId } =
+        await importAddresses(file);
       setAddresses(normalized);
+      setStartId(importedStartId);
       invalidateRoute();
     },
     [invalidateRoute],
@@ -297,10 +328,12 @@ export function useRoutePlanner() {
     geocodedCount: geocodedAddresses.length,
     canOptimize,
     pickMode,
+    startId,
     // eylemler
     addAddress,
     addAddressFromCoords,
     togglePickMode,
+    setStart,
     removeAddress,
     updateAddress,
     retryAddress,

@@ -38,11 +38,16 @@ export default function Home() {
         .filter(Boolean);
     }
 
-    // Rota yoksa, koordinatı çözülmüş tüm adresleri sade pin olarak göster.
+    // Rota yoksa, koordinatı çözülmüş tüm adresleri sade pin olarak göster;
+    // başlangıç olarak işaretli adres, rota öncesinde de ayırt edilsin diye
+    // yeşil 'start' pini olarak vurgulanır.
     return planner.addresses
       .filter((a) => a.status === "ok")
-      .map((a) => ({ id: a.id, lat: a.lat, lon: a.lon, raw: a.raw, customer: a.customer, orderNo: a.orderNo, seq: null, label: "•", type: "plain" }));
-  }, [planner.addresses, planner.route]);
+      .map((a) => {
+        const isStart = a.id === planner.startId;
+        return { id: a.id, lat: a.lat, lon: a.lon, raw: a.raw, customer: a.customer, orderNo: a.orderNo, seq: null, label: isStart ? "🏠" : "•", type: isStart ? "start" : "plain" };
+      });
+  }, [planner.addresses, planner.route, planner.startId]);
 
   async function handleImport(file) {
     setImportError(null);
@@ -108,10 +113,12 @@ export default function Home() {
               addresses={planner.addresses}
               route={planner.route}
               isGeocoding={planner.isGeocoding}
+              startId={planner.startId}
               onAdd={planner.addAddress}
               onUpdate={planner.updateAddress}
               onRemove={planner.removeAddress}
               onRetry={planner.retryAddress}
+              onSetStart={planner.setStart}
             />
           </div>
         </section>
