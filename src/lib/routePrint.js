@@ -25,7 +25,9 @@ function buildHtml({ stops, distance, duration, dateText }) {
   const km = (distance / 1000).toFixed(1);
   const durText = formatDuration(duration);
 
-  const rows = stops
+  // Rut planındaki ziyaret sırasına göre 1'den başlayarak artan sırala.
+  const rows = [...stops]
+    .sort((a, b) => a.seq - b.seq)
     .map(
       (s) => `
       <tr>
@@ -57,7 +59,8 @@ function buildHtml({ stops, distance, duration, dateText }) {
   td.seq { font-weight: 700; width: 36px; }
   td.coord { white-space: nowrap; color: #64748b; font-variant-numeric: tabular-nums; }
   tr:nth-child(even) td { background: #fbfdff; }
-  @page { margin: 16mm; }
+  /* Kağıt her zaman dikey (portrait) kullanılsın. */
+  @page { size: A4 portrait; margin: 16mm; }
   @media print { body { margin: 0; } }
 </style>
 </head>
