@@ -25,6 +25,7 @@ export function exportAddresses(addresses, startId = null) {
       orderNo: a.orderNo || "",
       lat: a.lat ?? null,
       lon: a.lon ?? null,
+      precision: a.precision ?? null,
       isStart: startId != null && a.id === startId,
     })),
   };
@@ -89,6 +90,11 @@ export function importAddresses(file) {
               orderNo: typeof a.orderNo === "string" ? a.orderNo.trim() : "",
               lat,
               lon,
+              precision: hasCoords
+                ? typeof a.precision === "string"
+                  ? a.precision
+                  : "exact"
+                : null,
               status: hasCoords ? "ok" : "pending",
               error: null,
             };

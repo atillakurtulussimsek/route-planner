@@ -197,6 +197,13 @@ export default function AddressItem({
   );
 }
 
+// 'exact' dışındaki kademeler yaklaşık sonuçtur; rozet metni.
+const PRECISION_LABELS = {
+  street: "sokak düzeyi",
+  neighborhood: "mahalle düzeyi",
+  district: "ilçe düzeyi",
+};
+
 /** Adresin geocoding durumunu gösteren küçük alt satır. */
 function StatusLine({ address, onRetry }) {
   if (address.status === "pending") {
@@ -210,9 +217,20 @@ function StatusLine({ address, onRetry }) {
     );
   }
   if (address.status === "ok") {
+    const approx = PRECISION_LABELS[address.precision];
     return (
-      <span className="text-xs text-green-600">
-        {address.lat.toFixed(5)}, {address.lon.toFixed(5)}
+      <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+        <span className="text-green-600">
+          {address.lat.toFixed(5)}, {address.lon.toFixed(5)}
+        </span>
+        {approx && (
+          <span
+            className="rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-700"
+            title="Tam adres bulunamadı; koordinat daha genel bir seviyede çözüldü. Gerekirse adresi düzenleyip tekrar deneyin."
+          >
+            ≈ Yaklaşık ({approx})
+          </span>
+        )}
       </span>
     );
   }

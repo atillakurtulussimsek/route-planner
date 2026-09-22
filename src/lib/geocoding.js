@@ -16,8 +16,10 @@ export function delay(ms) {
 /**
  * Tek bir adres metnini koordinata çevirir.
  * @param {string} query - Geocode edilecek adres metni.
- * @returns {Promise<{lat:number, lon:number, displayName:string} | null>}
+ * @returns {Promise<{lat:number, lon:number, displayName:string, precision:string} | null>}
  *          Bulunamazsa null döner. Ağ/sunucu hatasında throw eder.
+ *          precision: 'exact' | 'street' | 'neighborhood' | 'district'
+ *          (adres hangi kademede bulundu — 'exact' dışındakiler yaklaşıktır).
  */
 export async function geocodeAddress(query) {
   const trimmed = (query || "").trim();
@@ -37,7 +39,14 @@ export async function geocodeAddress(query) {
   }
 
   const data = await res.json();
-  return data?.found ? { lat: data.lat, lon: data.lon, displayName: data.displayName } : null;
+  return data?.found
+    ? {
+        lat: data.lat,
+        lon: data.lon,
+        displayName: data.displayName,
+        precision: data.precision || "exact",
+      }
+    : null;
 }
 
 /**

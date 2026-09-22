@@ -69,6 +69,7 @@ export function useRoutePlanner() {
           orderNo: "",
           lat: null,
           lon: null,
+          precision: null,
           status: "pending",
           error: null,
         },
@@ -96,6 +97,7 @@ export function useRoutePlanner() {
           orderNo: "",
           lat,
           lon,
+          precision: "exact",
           status: "ok",
           error: null,
         },
@@ -157,6 +159,7 @@ export function useRoutePlanner() {
           patch.raw = text;
           patch.lat = null;
           patch.lon = null;
+          patch.precision = null;
           patch.status = "pending";
           patch.error = null;
           textChanged = true;
@@ -172,7 +175,7 @@ export function useRoutePlanner() {
 
   const retryAddress = useCallback(
     (id) => {
-      patchAddress(id, { lat: null, lon: null, status: "pending", error: null });
+      patchAddress(id, { lat: null, lon: null, precision: null, status: "pending", error: null });
     },
     [patchAddress],
   );
@@ -201,6 +204,7 @@ export function useRoutePlanner() {
           patchAddress(next.id, {
             lat: result.lat,
             lon: result.lon,
+            precision: result.precision,
             status: "ok",
             error: null,
           });
